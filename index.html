@@ -889,7 +889,25 @@ function setDefaultWorkout(){currentExercises=[{name:'Press Banca',sets:'4×8',w
 // ========== EXERCISES ==========
 function renderExercises(){document.getElementById('exerciseList').innerHTML=currentExercises.map((ex,i)=>`<div class="exercise-item ${ex.completed?'completed':''}" onclick="toggleExercise(${i})"><div class="exercise-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="exercise-info"><div class="exercise-name">${ex.name}</div><div class="exercise-sets">${ex.sets} · ${ex.weight} kg</div></div><div class="exercise-muscle">${ex.muscle}</div></div>`).join('');updateWorkoutStats();}
 function toggleExercise(i){currentExercises[i].completed=!currentExercises[i].completed;renderExercises();}
-function updateWorkoutStats(){const done=currentExercises.filter(e=>e.completed).length;document.getElementById('completedCount').textContent=done;let vol=0;currentExercises.forEach(ex=>{if(ex.completed){const p=ex.sets.split('×');if(p.length===2)vol+=parseInt(p[0])*parseInt(p[1])*ex.weight;}});document.getElementById('totalVolume').textContent=vol.toLocaleString();}
+function parseSets(s){
+  if(!s)return[0,0];
+  var parts=s.replace(/x/gi,'×').split('×');
+  if(parts.length===2){var a=parseInt(parts[0])||0,b=parseInt(parts[1])||0;return[a,b];}
+  return[0,0];
+}
+function updateWorkoutStats(){
+  var done=currentExercises.filter(function(e){return e.completed;}).length;
+  document.getElementById('completedCount').textContent=done;
+  var vol=0;
+  currentExercises.forEach(function(ex){
+    if(ex.completed){
+      var p=parseSets(ex.sets);
+      var w=parseFloat(ex.weight)||0;
+      vol+=p[0]*p[1]*w;
+    }
+  });
+  document.getElementById('totalVolume').textContent=Math.round(vol).toLocaleString();
+}
 function renderWeek(){const wd=[{l:'L',p:85},{l:'M',p:100},{l:'X',p:0},{l:'J',p:90},{l:'V',p:100},{l:'S',p:30,t:true},{l:'D',p:0}];document.getElementById('weekGrid').innerHTML=wd.map(d=>`<div class="day-col ${d.t?'today':''}"><div class="day-bar-container"><div class="day-bar" style="height:0%;" data-height="${d.p}"></div></div><div class="day-label">${d.l}</div></div>`).join('');setTimeout(()=>document.querySelectorAll('.day-bar').forEach(b=>b.style.height=b.dataset.height+'%'),300);}
 function renderAchievements(){document.getElementById('achievementsList').innerHTML=[{i:'🔥',n:'Primera Sesión',d:'Completa tu primer entreno'},{i:'💎',n:'Constancia',d:'7 días seguidos'},{i:'🏆',n:'Centurión',d:'100 entrenos'},{i:'⚡',n:'Volumen Bruto',d:'100,000 kg de volumen'}].map(a=>`<div class="achievement-card"><div class="achievement-icon">${a.i}</div><div class="achievement-info"><div class="achievement-name">${a.n}</div><div class="achievement-desc">${a.d}</div></div></div>`).join('');}
 
@@ -1372,8 +1390,8 @@ function finishWorkout(){
   const duration=workoutStart?Math.floor((Date.now()-workoutStart)/1000):0;
   let vol=0;
   done.forEach(ex=>{
-    const p=ex.sets.split('×');
-    if(p.length===2)vol+=parseInt(p[0])*parseInt(p[1])*(ex.weight||0);
+    var p=parseSets(ex.sets);
+    vol+=p[0]*p[1]*(parseFloat(ex.weight)||0);
   });
   const entry={
     id:Date.now(),
