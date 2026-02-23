@@ -77,12 +77,14 @@ body{font-family:'Outfit',sans-serif;background:var(--bg-primary);color:var(--te
 .exercise-item.completed .exercise-check svg{opacity:1;}
 .exercise-info{flex:1;min-width:0;}.exercise-name{font-weight:600;font-size:14px;margin-bottom:2px;}
 .exercise-sets{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
-.ex-edit-row{display:flex;align-items:center;gap:6px;margin-top:6px;}
-.ex-edit-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;padding:0;font-family:'JetBrains Mono',monospace;}
+.ex-edit-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;width:100%;}
+.ex-edit-group{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;background:var(--bg-elevated);border-radius:8px;padding:6px 2px;}
+.ex-edit-group .ex-edit-label{width:100%;}
+.ex-edit-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-primary);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;padding:0;flex-shrink:0;}
 .ex-edit-btn:active{background:var(--accent-dim);border-color:var(--accent);}
-.ex-edit-val{font-size:13px;font-weight:600;min-width:42px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--text-primary);}
-.ex-edit-label{font-size:10px;color:var(--text-muted);margin-right:2px;}
-.ex-edit-input{width:52px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-weight:600;text-align:center;font-family:'JetBrains Mono',monospace;padding:0 4px;box-sizing:border-box;}
+.ex-edit-val{font-size:13px;font-weight:700;min-width:20px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--text-primary);}
+.ex-edit-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;text-align:center;margin-bottom:2px;display:block;}
+.ex-edit-input{width:40px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-primary);font-size:12px;font-weight:700;text-align:center;font-family:'JetBrains Mono',monospace;padding:0;box-sizing:border-box;}
 .ex-edit-input:focus{border-color:var(--accent);outline:none;}
 .exercise-muscle{font-size:11px;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:1px;font-weight:500;white-space:nowrap;}
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:28px;}
@@ -905,20 +907,18 @@ function renderExercises(){
       '<div class="exercise-sets">'+ex.sets+' · '+w+' kg</div></div>'+
       '<div class="exercise-muscle">'+ex.muscle+'</div></div>'+
       '<div class="ex-edit-row" onclick="event.stopPropagation()">'+
-      '<span class="ex-edit-label">Series</span>'+
+      '<div class="ex-edit-group"><span class="ex-edit-label">Series</span>'+
       '<button class="ex-edit-btn" onclick="adjExSets('+i+',-1)">−</button>'+
-      '<span class="ex-edit-val" id="exSets'+i+'">'+sets+'</span>'+
-      '<button class="ex-edit-btn" onclick="adjExSets('+i+',1)">+</button>'+
-      '<span style="width:6px;"></span>'+
-      '<span class="ex-edit-label">Reps</span>'+
+      '<span class="ex-edit-val">'+sets+'</span>'+
+      '<button class="ex-edit-btn" onclick="adjExSets('+i+',1)">+</button></div>'+
+      '<div class="ex-edit-group"><span class="ex-edit-label">Reps</span>'+
       '<button class="ex-edit-btn" onclick="adjExReps('+i+',-1)">−</button>'+
-      '<span class="ex-edit-val" id="exReps'+i+'">'+reps+'</span>'+
-      '<button class="ex-edit-btn" onclick="adjExReps('+i+',1)">+</button>'+
-      '<span style="width:6px;"></span>'+
-      '<span class="ex-edit-label">Kg</span>'+
+      '<span class="ex-edit-val">'+reps+'</span>'+
+      '<button class="ex-edit-btn" onclick="adjExReps('+i+',1)">+</button></div>'+
+      '<div class="ex-edit-group"><span class="ex-edit-label">Kg</span>'+
       '<button class="ex-edit-btn" onclick="adjExWeight('+i+',-2.5)">−</button>'+
       '<input class="ex-edit-input" type="number" value="'+w+'" onchange="setExWeight('+i+',this.value)" onclick="event.stopPropagation();this.select()">'+
-      '<button class="ex-edit-btn" onclick="adjExWeight('+i+',2.5)">+</button>'+
+      '<button class="ex-edit-btn" onclick="adjExWeight('+i+',2.5)">+</button></div>'+
       '</div></div>';
   }).join('');
   updateWorkoutStats();
