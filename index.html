@@ -68,7 +68,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg-primary);color:var(--te
 .program-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:22px;}
 .program-name{font-weight:600;font-size:15px;margin-bottom:4px;}.program-info{font-size:12px;color:var(--text-muted);}
 .exercise-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
-.exercise-item{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .3s;}
+.exercise-item{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .3s;flex-wrap:wrap;}
 .exercise-item:hover{background:var(--bg-card-hover);border-color:var(--accent-dim);}
 .exercise-item.completed{opacity:.5;}
 .exercise-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;}
@@ -77,6 +77,13 @@ body{font-family:'Outfit',sans-serif;background:var(--bg-primary);color:var(--te
 .exercise-item.completed .exercise-check svg{opacity:1;}
 .exercise-info{flex:1;min-width:0;}.exercise-name{font-weight:600;font-size:14px;margin-bottom:2px;}
 .exercise-sets{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.ex-edit-row{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.ex-edit-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;padding:0;font-family:'JetBrains Mono',monospace;}
+.ex-edit-btn:active{background:var(--accent-dim);border-color:var(--accent);}
+.ex-edit-val{font-size:13px;font-weight:600;min-width:42px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--text-primary);}
+.ex-edit-label{font-size:10px;color:var(--text-muted);margin-right:2px;}
+.ex-edit-input{width:52px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-weight:600;text-align:center;font-family:'JetBrains Mono',monospace;padding:0 4px;box-sizing:border-box;}
+.ex-edit-input:focus{border-color:var(--accent);outline:none;}
 .exercise-muscle{font-size:11px;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:1px;font-weight:500;white-space:nowrap;}
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:28px;}
 .day-col{display:flex;flex-direction:column;align-items:center;gap:8px;}
@@ -887,7 +894,56 @@ function refreshUI(){
 function setDefaultWorkout(){currentExercises=[{name:'Press Banca',sets:'4×8',weight:80,muscle:'Pecho',completed:false},{name:'Press Inclinado DB',sets:'3×10',weight:30,muscle:'Pecho',completed:false},{name:'Aperturas Cable',sets:'3×12',weight:15,muscle:'Pecho',completed:false},{name:'Press Militar',sets:'4×8',weight:50,muscle:'Hombro',completed:false},{name:'Elevaciones Laterales',sets:'4×15',weight:12,muscle:'Hombro',completed:false},{name:'Tríceps Polea',sets:'3×12',weight:25,muscle:'Tríceps',completed:false}];renderExercises();}
 
 // ========== EXERCISES ==========
-function renderExercises(){document.getElementById('exerciseList').innerHTML=currentExercises.map((ex,i)=>`<div class="exercise-item ${ex.completed?'completed':''}" onclick="toggleExercise(${i})"><div class="exercise-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="exercise-info"><div class="exercise-name">${ex.name}</div><div class="exercise-sets">${ex.sets} · ${ex.weight} kg</div></div><div class="exercise-muscle">${ex.muscle}</div></div>`).join('');updateWorkoutStats();}
+function renderExercises(){
+  document.getElementById('exerciseList').innerHTML=currentExercises.map(function(ex,i){
+    var p=parseSets(ex.sets);
+    var sets=p[0],reps=p[1],w=parseFloat(ex.weight)||0;
+    return '<div class="exercise-item '+(ex.completed?'completed':'')+'" style="flex-wrap:wrap;">'+
+      '<div onclick="toggleExercise('+i+')" style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">'+
+      '<div class="exercise-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+      '<div class="exercise-info"><div class="exercise-name">'+ex.name+'</div>'+
+      '<div class="exercise-sets">'+ex.sets+' · '+w+' kg</div></div>'+
+      '<div class="exercise-muscle">'+ex.muscle+'</div></div>'+
+      '<div class="ex-edit-row" onclick="event.stopPropagation()">'+
+      '<span class="ex-edit-label">Series</span>'+
+      '<button class="ex-edit-btn" onclick="adjExSets('+i+',-1)">−</button>'+
+      '<span class="ex-edit-val" id="exSets'+i+'">'+sets+'</span>'+
+      '<button class="ex-edit-btn" onclick="adjExSets('+i+',1)">+</button>'+
+      '<span style="width:6px;"></span>'+
+      '<span class="ex-edit-label">Reps</span>'+
+      '<button class="ex-edit-btn" onclick="adjExReps('+i+',-1)">−</button>'+
+      '<span class="ex-edit-val" id="exReps'+i+'">'+reps+'</span>'+
+      '<button class="ex-edit-btn" onclick="adjExReps('+i+',1)">+</button>'+
+      '<span style="width:6px;"></span>'+
+      '<span class="ex-edit-label">Kg</span>'+
+      '<button class="ex-edit-btn" onclick="adjExWeight('+i+',-2.5)">−</button>'+
+      '<input class="ex-edit-input" type="number" value="'+w+'" onchange="setExWeight('+i+',this.value)" onclick="event.stopPropagation();this.select()">'+
+      '<button class="ex-edit-btn" onclick="adjExWeight('+i+',2.5)">+</button>'+
+      '</div></div>';
+  }).join('');
+  updateWorkoutStats();
+}
+function adjExSets(i,d){
+  var p=parseSets(currentExercises[i].sets);
+  var ns=Math.max(1,p[0]+d);
+  currentExercises[i].sets=ns+'×'+p[1];
+  renderExercises();
+}
+function adjExReps(i,d){
+  var p=parseSets(currentExercises[i].sets);
+  var nr=Math.max(1,p[1]+d);
+  currentExercises[i].sets=p[0]+'×'+nr;
+  renderExercises();
+}
+function adjExWeight(i,d){
+  var w=parseFloat(currentExercises[i].weight)||0;
+  currentExercises[i].weight=Math.max(0,Math.round((w+d)*10)/10);
+  renderExercises();
+}
+function setExWeight(i,v){
+  currentExercises[i].weight=Math.max(0,parseFloat(v)||0);
+  updateWorkoutStats();
+}
 function toggleExercise(i){currentExercises[i].completed=!currentExercises[i].completed;renderExercises();}
 function parseSets(s){
   if(!s)return[0,0];
@@ -1215,6 +1271,9 @@ function renderCreateWorkoutModal(){
     </div>
     <button class="start-btn" onclick="saveCustomWorkout()" style="margin-top:16px;" ${window._cwExercises.length===0?'disabled':''}>Guardar Entreno (${window._cwExercises.length} ejercicios)</button>`;
 }
+function adjCwSets(i,d){var p=parseSets(window._cwExercises[i].sets);window._cwExercises[i].sets=Math.max(1,p[0]+d)+'×'+p[1];renderCreateWorkoutModal();}
+function adjCwReps(i,d){var p=parseSets(window._cwExercises[i].sets);window._cwExercises[i].sets=p[0]+'×'+Math.max(1,p[1]+d);renderCreateWorkoutModal();}
+function adjCwWeight(i,d){var w=parseFloat(window._cwExercises[i].weight)||0;window._cwExercises[i].weight=Math.max(0,Math.round((w+d)*10)/10);renderCreateWorkoutModal();}
 function addCwExercise(){
   const name=document.getElementById('cwExName').value.trim();if(!name){showToast('Pon nombre al ejercicio');return;}
   window._cwExercises.push({name,sets:document.getElementById('cwExSets').value.trim()||'3×10',weight:parseInt(document.getElementById('cwExWeight').value)||0,muscle:document.getElementById('cwExMuscle').value.trim()||'General'});
@@ -1360,6 +1419,14 @@ function viewPresetRoutine(pi){
     <button class="start-btn" onclick="adoptPresetRoutine(${pi})" style="margin-top:12px;">📥 Guardar en Mis Rutinas</button>`;
 }
 
+function adjPresetWeight(pi,si,ei,d){
+  var w=parseFloat(PRESET_ROUTINES[pi].splits[si].exercises[ei].weight)||0;
+  PRESET_ROUTINES[pi].splits[si].exercises[ei].weight=Math.max(0,Math.round((w+d)*10)/10);
+  viewPresetRoutine(pi);
+}
+function setPresetWeight(pi,si,ei,v){
+  PRESET_ROUTINES[pi].splits[si].exercises[ei].weight=Math.max(0,parseFloat(v)||0);
+}
 function loadPresetDay(pi,si){
   const s=PRESET_ROUTINES[pi].splits[si];
   currentExercises=s.exercises.map(e=>({...e,completed:false}));
